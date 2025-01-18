@@ -56,12 +56,3 @@ vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 15
-
--- Disable in-line LSP Diagnostics. Shows Diagonostics only on hover
--- Disabling diagnostics to avoid LSP_Lines duplication
-vim.diagnostic.config { virtual_text = false }
-vim.diagnostic.config { virtual_lines = false }
-
--- Show line diagnostics automatically in hover window
-vim.o.updatetime = 250
-vim.cmd [[autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]]
