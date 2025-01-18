@@ -34,8 +34,6 @@ return {
         severity_sort = true,
       })
 
-      vim.o.updatetime = 250
-
       -- ensure diagnostics only appear in normal mode and on hover
       vim.api.nvim_create_autocmd({ "CursorHold" }, {
         callback = function()
@@ -43,6 +41,32 @@ return {
             vim.diagnostic.open_float(nil, { focus = false })
           end
         end,
+      })
+
+
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "sql", "mysql", "plsql" },
+        callback = function()
+          -- Disable blink.cmp for SQL buffers
+          require('blink.cmp').disable()
+
+          -- Enable nvim-cmp for database completion
+          require('cmp').setup.buffer({
+            sources = {
+              { name = "vim-dadbod-completion", group_index = 1 }, -- Ensure DB completion is prioritized
+              { name = "buffer", group_index = 2 },
+              { name = "path", group_index = 3 }
+            }
+          })
+        end
+      })
+
+      -- Re-enable blink.cmp when leaving SQL buffers
+      vim.api.nvim_create_autocmd("BufLeave", {
+        pattern = { "sql", "mysql", "plsql" },
+        callback = function()
+          require('blink.cmp').enable()
+        end
       })
 
       for server, config in pairs(opts.servers or {}) do
@@ -62,6 +86,13 @@ return {
     },
     opts_extend = { "sources.default" }
   },
+  {
+  'hrsh7th/nvim-cmp', -- General completion (only used for SQL)
+  dependencies = {
+    'hrsh7th/cmp-buffer',
+    'hrsh7th/cmp-path',
+    'kristijanhusak/vim-dadbod-completion' -- Database completion source
+  },},
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
@@ -90,10 +121,7 @@ return {
         }
       end,
       formatters_by_ft = {
-        lua = {
-          command = "stylua",
-          args = { "--config-path", vim.fn.expand("~/.config/nvim/.stylua.toml") }
-        }
+        lua = { "stylua"}
       }
     }
   },
