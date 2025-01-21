@@ -2,7 +2,7 @@ return {
   'folke/which-key.nvim',
   event = "VimEnter",
   opts = {
-    preset = "helix",
+    -- preset = "helix",
     delay = 0,
     icons = {
       rules = false,

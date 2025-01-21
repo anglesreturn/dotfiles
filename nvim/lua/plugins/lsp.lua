@@ -1,17 +1,14 @@
 return {
-  -- language server configuration
+  -- LSP config 
   {
     'neovim/nvim-lspconfig',
-    dependencies = { 'saghen/blink.cmp' },
+    dependencies = { 'saghen/blink.cmp', 'b0o/schemastore.nvim' },
     opts = {
       servers = {
-        ruff = {
-          on_attach = function(_, bufnr)
-            vim.keymap.set('n', '<leader>la',
-              vim.lsp.buf.code_action,
-              { desc = 'Code Action', buffer = bufnr })
-          end
-        },
+        -- python (ruff)
+        ruff = {},
+
+        -- lua
         lua_ls = {
           settings = {
             Lua = {
@@ -20,12 +17,61 @@ return {
               telemetry = { enable = false }
             }
           }
+        },
+
+        -- rust (rustacean)
+        rust_analyzer = {
+          settings = {
+            ["rust-analyzer"] = {
+              checkOnSave = { command = "clippy" },
+              procMacro = { enable = true },
+              cargo = { allFeatures = true },
+            }
+          }
+        },
+
+        -- json
+        jsonls = {
+          settings = function()
+            local ok, schemastore = pcall(require, 'schemastore')
+            return {
+              json = {
+                schemas = ok and schemastore.json.schemas() or {},
+                validate = { enable = true }
+              }
+            }
+          end
+        },
+
+        -- bash
+        bashls = {
+          filetypes = { "sh", "bash", "zsh", "Makefile" }
         }
       }
     },
-    -- set capabilities for each server dynamically
+
     config = function(_, opts)
       local lspconfig = require 'lspconfig'
+
+      -- attach keybindings to all LSPs dynamically
+      local function on_attach(_, bufnr)
+
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr, desc = "Show hover information" })
+        vim.keymap.set("n", "<leader>la", vim.lsp.buf.code_action, { buffer = bufnr, desc = "Show available code actions" })
+        vim.keymap.set("n", "<leader>ld", vim.lsp.buf.definition, { buffer = bufnr, desc = "Go to definition" })
+        vim.keymap.set("n", "<leader>lr", vim.lsp.buf.rename, { buffer = bufnr, desc = "Rename symbol" })
+        vim.keymap.set("n", "<leader>li", vim.lsp.buf.implementation, { buffer = bufnr, desc = "Go to implementation" })
+        vim.keymap.set("n", "<leader>ls", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Show function signature help" })
+
+        -- language-specific bindings
+        local filetype = vim.bo[bufnr].filetype
+
+        if filetype == "rust" then
+          vim.keymap.set("n", "<leader>le", "<cmd>RustExpandMacro<CR>", { buffer = bufnr, desc = "Expand Rust macro" })
+          vim.keymap.set("n", "<leader>lm", "<cmd>RustHoverActions<CR>", { buffer = bufnr, desc = "Rust hover actions" })
+          vim.keymap.set("n", "<leader>lt", "<cmd>RustTest<CR>", { buffer = bufnr, desc = "Run Rust tests" })
+        end
+      end
 
       vim.diagnostic.config({
         update_in_insert = false, -- stop diagnostics while typing
@@ -34,7 +80,7 @@ return {
         severity_sort = true,
       })
 
-      -- ensure diagnostics only appear in normal mode and on hover
+      -- diagnostics only in normal mode and on hover
       vim.api.nvim_create_autocmd({ "CursorHold" }, {
         callback = function()
           if vim.fn.mode() ~= "i" then
@@ -43,38 +89,34 @@ return {
         end,
       })
 
-
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "sql", "mysql", "plsql" },
-        callback = function()
-          -- Disable blink.cmp for SQL buffers
-          require('blink.cmp').disable()
-
-          -- Enable nvim-cmp for database completion
-          require('cmp').setup.buffer({
-            sources = {
-              { name = "vim-dadbod-completion", group_index = 1 }, -- Ensure DB completion is prioritized
-              { name = "buffer", group_index = 2 },
-              { name = "path", group_index = 3 }
-            }
-          })
-        end
-      })
-
-      -- Re-enable blink.cmp when leaving SQL buffers
-      vim.api.nvim_create_autocmd("BufLeave", {
-        pattern = { "sql", "mysql", "plsql" },
-        callback = function()
-          require('blink.cmp').enable()
-        end
-      })
-
+      -- setup all lsp servers 
       for server, config in pairs(opts.servers or {}) do
         config.capabilities = require('blink.cmp').get_lsp_capabilities(config.capabilities)
+        config.on_attach = on_attach
         lspconfig[server].setup(config)
       end
     end
   },
+
+  -- json schema support 
+  {
+    "b0o/schemastore.nvim",
+  },
+
+  -- rustacean 
+  {
+    "mrcjkb/rustaceanvim",
+    version = "^4",
+    ft = { "rust" },
+    opts = {
+      tools = {
+        hover_actions = { auto_focus = true },
+      },
+      server = {}
+    }
+  },
+
+  -- blink auto comp
   {
     'saghen/blink.cmp',
     version = "v0.9.0",
@@ -86,13 +128,18 @@ return {
     },
     opts_extend = { "sources.default" }
   },
+
+  -- auto complete (SQL only) 
   {
-  'hrsh7th/nvim-cmp', -- General completion (only used for SQL)
-  dependencies = {
-    'hrsh7th/cmp-buffer',
-    'hrsh7th/cmp-path',
-    'kristijanhusak/vim-dadbod-completion' -- Database completion source
-  },},
+    'hrsh7th/nvim-cmp',
+    dependencies = {
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'kristijanhusak/vim-dadbod-completion' -- Database completion source
+    }
+  },
+
+  -- auto-pairing brackets
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
@@ -100,6 +147,8 @@ return {
       require('nvim-autopairs').setup {}
     end
   },
+
+  -- auto-formatting
   {
     'stevearc/conform.nvim',
     lazy = false,
@@ -121,10 +170,13 @@ return {
         }
       end,
       formatters_by_ft = {
-        lua = { "stylua"}
+        lua = { "stylua" },
+        rust = { "rustfmt" }
       }
     }
   },
+
+  -- linting 
   {
     'mfussenegger/nvim-lint',
     event = { "BufReadPre", "BufNewFile" },
@@ -138,10 +190,11 @@ return {
       }
 
       lint.linters_by_ft = {
-        python = { "mypy" }
+        python = { "mypy" },
+        rust = { "clippy" }
       }
 
-      -- Auto-run linting on save
+      -- auto-run linting on save
       vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
         callback = function()
           require("lint").try_lint()
