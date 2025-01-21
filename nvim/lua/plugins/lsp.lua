@@ -33,12 +33,12 @@ return {
         -- json
         jsonls = {
           settings = function()
-            local ok, schemastore = pcall(require, 'schemastore')
+            local schemastore = require("schemastore")
             return {
               json = {
-                schemas = ok and schemastore.json.schemas() or {},
-                validate = { enable = true }
-              }
+                schemas = schemastore.json.schemas(),
+                validate = { enable = true },
+              },
             }
           end
         },
