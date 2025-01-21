@@ -1,5 +1,6 @@
 -- for highlight plugin
 vim.opt.termguicolors = true
+vim.opt.encoding = "utf-8"
 
 -- Set indentation rules for Lua files
 vim.opt.tabstop = 2      -- Number of spaces for a tab

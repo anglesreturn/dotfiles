@@ -22,17 +22,6 @@ return {
           enable = true,
         },
 
-        -- Incremental selection
-        incremental_selection = {
-          enable = true,
-          keymaps = {
-            init_selection = '<leader>hs',
-            node_incremental = '<leader>hi',
-            scope_incremental = '<leader>hc',
-            node_decremental = '<leader>hd',
-          },
-        },
-
         -- Text objects
         textobjects = {
           select = {

@@ -19,5 +19,16 @@ return {
         })
       end
     })
+
+     -- Keymaps for vim-dadbod-ui
+    local map = vim.api.nvim_set_keymap
+    local opts = { noremap = true, silent = true }
+
+    map("n", "<leader>db", ":DBUIToggle<CR>", opts)
+    map("n", "<leader>dn", ":DBUIAddConnection<CR>", opts)
+    map("n", "<leader>dr", ":DBUIExecuteQuery<CR>", opts)
+    map("n", "<leader>df", ":DBUIFindBuffer<CR>", opts)
+    map("n", "<leader>dh", ":DBUIShowHelp<CR>", opts)
+
   end
 }

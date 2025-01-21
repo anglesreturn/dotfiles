@@ -6,29 +6,34 @@ return {
     delay = 0,
     icons = {
       rules = false,
-      breadcrumb = " ", -- symbol used in the command line area that shows your active key combo
-      separator = "󱦰  ", -- symbol used between a key and it's label
-      group = "󰹍 ", -- symbol prepended to a group
+      breadcrumb = " ",
+      separator = "󱦰  ",
+      group = "󰹍 ",
     },
     show_keys = false,
     spec = {
       {
         mode = { "n", "v" },
-        { "<leader>g", group = "git" },
-        { "<leader>r", group = "Replace" },
-        -- { "<leader>l", group = "lsp" },
-        { "<leader>t", group = "Test" },
-        { "<leader>f", group = "Find" },
+
+        -- not groups
+        -- { "<leader>e", "File Explorer", icon = { icon = " ", color = "yellow" } },
+        -- { "<leader> ", "Buffers", icon = { icon = "󰿯 ", color = "blue" } },
+
+        -- groups
+        { "<leader>t", group = "Terminal", icon = { icon = " ", color = "cyan" } },
+        { "<leader>d", group = "Database", icon = { icon = " ", color = "purple" } },
+        { "<leader>f", group = "Find", icon = { icon = "󰱼 ", color = "green" } },
+        { "<leader>g", group = "Git", icon = { icon = "󰊢 ", color = "red" } },
         { '<leader>x', group = 'Diagnostics', icon = { icon = '󱖫 ', color = 'green' } },
-        { "<leader>l", group = "LSP" },
-        { '<leader>s', group = 'Session' },
-        -- { "<leader>g", group = "go" },
-        { "<leader>w", group = "Workspace" },
-        { "[", group = "prev" },
-        { "]", group = "next" },
-        { "g", group = "goto" },
-        -- { '<leader>c', group = '[c]ode' },
-        -- { '<leader>r', group = '[r]eload' },
+        { "<leader>l", group = "LSP", icon = { icon = " ", color = "blue" } },
+
+        -- debugging inside lsp
+        { "<leader>lD", group = "Debugging", icon = { icon = " ", color = "red" } },
+
+        -- navigation
+        { "[", group = "Prev", icon = { icon = "󰄾 ", color = "magenta" } },
+        { "]", group = "Next", icon = { icon = "󰄿 ", color = "magenta" } },
+        { "g", group = "Goto", icon = { icon = "󰌌 ", color = "yellow" } },
       },
     },
   },

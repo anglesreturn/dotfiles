@@ -1,151 +1,207 @@
 return {
-  -- LSP config 
+  -- LSP config
   {
+
     'neovim/nvim-lspconfig',
     dependencies = { 'saghen/blink.cmp', 'b0o/schemastore.nvim' },
     opts = {
       servers = {
-        -- python (ruff)
-        ruff = {},
+        -- python auto-complete only (pyright)
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                autoSearchPaths = true,
+                diagnosticMode = 'none',
+                useLibraryCodeForTypes = true,
+                typeCheckingMode = 'off',
+              },
+            },
+          },
+        },
+
+        -- python linter / formatter (ruff)
+        ruff = {
+          settings = {
+            python = {
+              analysis = {
+                autoSearchPaths = true,
+                diagnosticMode = 'workspace',
+              },
+            },
+          },
+        },
 
         -- lua
         lua_ls = {
           settings = {
             Lua = {
               diagnostics = { globals = { 'vim' } },
-              workspace = { library = vim.api.nvim_get_runtime_file('', true), checkThirdParty = false },
-              telemetry = { enable = false }
-            }
-          }
-        },
-
-        -- rust (rustacean)
-        rust_analyzer = {
-          settings = {
-            ["rust-analyzer"] = {
-              checkOnSave = { command = "clippy" },
-              procMacro = { enable = true },
-              cargo = { allFeatures = true },
-            }
-          }
+              workspace = {
+                library = vim.api.nvim_get_runtime_file('', true),
+                checkThirdParty = false,
+              },
+              telemetry = { enable = false },
+              format = { enable = true },
+            },
+          },
         },
 
         -- json
         jsonls = {
           settings = function()
-            local schemastore = require("schemastore")
+            local schemastore = require 'schemastore'
             return {
               json = {
                 schemas = schemastore.json.schemas(),
                 validate = { enable = true },
               },
             }
-          end
+          end,
         },
 
         -- bash
         bashls = {
-          filetypes = { "sh", "bash", "zsh", "Makefile" }
-        }
-      }
+          filetypes = { 'sh', 'bash', 'zsh', 'Makefile' },
+        },
+      },
     },
 
     config = function(_, opts)
       local lspconfig = require 'lspconfig'
 
-      -- attach keybindings to all LSPs dynamically
-      local function on_attach(_, bufnr)
+      -- per server capabilities
+      local function get_capabilities(server)
+        local capabilities = vim.lsp.protocol.make_client_capabilities()
 
-        vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr, desc = "Show hover information" })
-        vim.keymap.set("n", "<leader>la", vim.lsp.buf.code_action, { buffer = bufnr, desc = "Show available code actions" })
-        vim.keymap.set("n", "<leader>ld", vim.lsp.buf.definition, { buffer = bufnr, desc = "Go to definition" })
-        vim.keymap.set("n", "<leader>lr", vim.lsp.buf.rename, { buffer = bufnr, desc = "Rename symbol" })
-        vim.keymap.set("n", "<leader>li", vim.lsp.buf.implementation, { buffer = bufnr, desc = "Go to implementation" })
-        vim.keymap.set("n", "<leader>ls", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Show function signature help" })
-
-        -- language-specific bindings
-        local filetype = vim.bo[bufnr].filetype
-
-        if filetype == "rust" then
-          vim.keymap.set("n", "<leader>le", "<cmd>RustExpandMacro<CR>", { buffer = bufnr, desc = "Expand Rust macro" })
-          vim.keymap.set("n", "<leader>lm", "<cmd>RustHoverActions<CR>", { buffer = bufnr, desc = "Rust hover actions" })
-          vim.keymap.set("n", "<leader>lt", "<cmd>RustTest<CR>", { buffer = bufnr, desc = "Run Rust tests" })
+        if server == 'vim-dadbod-completion' and pcall(require, 'cmp_nvim_lsp') then
+          capabilities = require('cmp_nvim_lsp').default_capabilities()
+        elseif pcall(require, 'blink.cmp') then
+          capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
         end
+
+        return capabilities
       end
 
-      vim.diagnostic.config({
-        update_in_insert = false, -- stop diagnostics while typing
-        virtual_text = false,
-        float = { border = "rounded" },
-        severity_sort = true,
-      })
+      -- re-runs on every buffer
+      vim.api.nvim_create_autocmd('LspAttach', {
+        group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
+        callback = function(event)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          local bufnr = event.buf
+          local server = client and client.name or ''
 
-      -- diagnostics only in normal mode and on hover
-      vim.api.nvim_create_autocmd({ "CursorHold" }, {
-        callback = function()
-          if vim.fn.mode() ~= "i" then
-            vim.diagnostic.open_float(nil, { focus = false })
+          -- apply capabilities to the server
+          if client then client.capabilities = get_capabilities(server) end
+
+          -- keymaps
+          local map = function(keys, func, desc, mode)
+            mode = mode or 'n'
+            vim.keymap.set(mode, keys, func, { buffer = bufnr, desc = 'LSP: ' .. desc })
           end
+
+          map('K', vim.lsp.buf.hover, 'Show hover information')
+          map('<leader>la', vim.lsp.buf.code_action, 'Show available code actions')
+          map('<leader>ld', vim.lsp.buf.definition, 'Go to definition')
+          map('<leader>lr', vim.lsp.buf.rename, 'Rename symbol')
+          map('<leader>li', vim.lsp.buf.implementation, 'Go to implementation')
+          map('<leader>ls', vim.lsp.buf.signature_help, 'Show function signature help')
+
+          map('<leader>fr', require('telescope.builtin').lsp_references, 'Find references')
+          map('<leader>la', vim.lsp.buf.code_action, 'Code Action', { 'n', 'x' })
+          map('<leader>lc', vim.lsp.buf.declaration, 'Goto Declaration')
         end,
       })
 
-      -- setup all lsp servers 
+      -- diagnostics settings
+      vim.diagnostic.config {
+        update_in_insert = false, -- stop diagnostics while typing
+        virtual_text = false,
+        float = { border = 'rounded' },
+        severity_sort = true,
+      }
+
+      -- show in normal mode (not insert) and on hover
+      vim.api.nvim_create_autocmd('CursorHold', {
+        callback = function()
+          if vim.fn.mode() ~= 'i' then vim.diagnostic.open_float(nil, { focus = false }) end
+        end,
+      })
+
+      -- setup all LSP servers
       for server, config in pairs(opts.servers or {}) do
-        config.capabilities = require('blink.cmp').get_lsp_capabilities(config.capabilities)
-        config.on_attach = on_attach
         lspconfig[server].setup(config)
       end
-    end
+    end,
   },
 
-  -- json schema support 
+  -- json schema support
   {
-    "b0o/schemastore.nvim",
+    'b0o/schemastore.nvim',
   },
 
-  -- rustacean 
+  -- rustacean
   {
-    "mrcjkb/rustaceanvim",
-    version = "^4",
-    ft = { "rust" },
-    opts = {
-      tools = {
-        hover_actions = { auto_focus = true },
-      },
-      server = {}
-    }
+    'mrcjkb/rustaceanvim',
+    version = '^4',
+    ft = { 'rust' },
+    init = function()
+      vim.g.rustaceanvim = {
+        tools = {
+          hover_actions = { auto_focus = true },
+        },
+        server = {
+          default_settings = {
+            ['rust-analyzer'] = {
+              checkOnSave = { command = 'clippy' },
+              procMacro = { enable = true },
+              cargo = { allFeatures = true },
+            },
+          },
+          on_attach = function(client, bufnr)
+            local map = function(keys, func, desc)
+              vim.keymap.set('n', keys, func, { buffer = bufnr, desc = 'Rust: ' .. desc })
+            end
+            map('<leader>le', '<cmd>RustExpandMacro<CR>', 'Expand Rust Macro')
+            map('<leader>lm', '<cmd>RustHoverActions<CR>', 'Rust Hover Actions')
+            map('<leader>lt', '<cmd>RustTest<CR>', 'Run Rust Tests')
+          end,
+        },
+      }
+    end,
   },
 
   -- blink auto comp
   {
     'saghen/blink.cmp',
-    version = "v0.9.0",
+    version = 'v0.9.0',
     event = { 'LspAttach' },
     opts = {
       keymap = { preset = 'super-tab' },
-      appearance = { use_nvim_cmp_as_default = true, nerd_font_variant = 'mono' },
+      appearance = {
+        use_nvim_cmp_as_default = true,
+        nerd_font_variant = 'mono',
+      },
       sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
     },
-    opts_extend = { "sources.default" }
+    opts_extend = { 'sources.default' },
   },
 
-  -- auto complete (SQL only) 
+  -- auto complete (SQL only)
   {
     'hrsh7th/nvim-cmp',
     dependencies = {
       'hrsh7th/cmp-buffer',
       'hrsh7th/cmp-path',
-      'kristijanhusak/vim-dadbod-completion' -- Database completion source
-    }
+      'kristijanhusak/vim-dadbod-completion', -- Database completion source
+    },
   },
 
   -- auto-pairing brackets
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
-    config = function()
-      require('nvim-autopairs').setup {}
-    end
+    config = function() require('nvim-autopairs').setup {} end,
   },
 
   -- auto-formatting
@@ -155,51 +211,51 @@ return {
     keys = {
       {
         '<leader>lf',
-        function()
-          require('conform').format { async = true, lsp_fallback = true }
-        end,
-        desc = 'Format buffer'
-      }
+        function() require('conform').format { async = true, lsp_fallback = true } end,
+        desc = 'Format buffer',
+      },
     },
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
         return {
           timeout_ms = 500,
-          lsp_fallback = vim.bo[bufnr].filetype ~= 'c' and vim.bo[bufnr].filetype ~= 'cpp'
+          lsp_fallback = vim.bo[bufnr].filetype ~= 'rust', -- Ensure rustfmt is used over LSP
         }
       end,
       formatters_by_ft = {
-        lua = { "stylua" },
-        rust = { "rustfmt" }
-      }
-    }
+        lua = { 'stylua' },
+        rust = { 'rustfmt' },
+        json = { 'jq' },
+        sh = { 'shfmt' },
+        make = { 'just' },
+        toml = { 'taplo' },
+      },
+    },
   },
 
-  -- linting 
+  -- linting
   {
     'mfussenegger/nvim-lint',
-    event = { "BufReadPre", "BufNewFile" },
+    event = { 'BufReadPre', 'BufNewFile' },
     config = function()
-      local lint = require('lint')
+      local lint = require 'lint'
 
       lint.linters.mypy.args = {
-        "--ignore-missing-imports",
-        "--follow-imports=silent",
-        "--show-column-numbers"
+        '--ignore-missing-imports',
+        '--follow-imports=silent',
+        '--show-column-numbers',
       }
 
       lint.linters_by_ft = {
-        python = { "mypy" },
-        rust = { "clippy" }
+        python = { 'mypy' },
+        rust = { 'clippy' },
       }
 
       -- auto-run linting on save
-      vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-        callback = function()
-          require("lint").try_lint()
-        end
+      vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, {
+        callback = function() require('lint').try_lint() end,
       })
-    end
-  }
+    end,
+  },
 }

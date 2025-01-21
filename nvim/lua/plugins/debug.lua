@@ -39,19 +39,19 @@ return {
     end
 
     -- Keymaps for debugging
-    vim.keymap.set("n", "<leader>ds", function() dap.continue() end, { desc = "Start/Continue Debugging" })
-    vim.keymap.set("n", "<Leader>do", function() dap.step_over() end, { desc = "Step Over" })
-    vim.keymap.set("n", "<Leader>di", function() dap.step_into() end, { desc = "Step Into" })
-    vim.keymap.set("n", "<Leader>dO", function() dap.step_out() end, { desc = "Step Out" })
-    vim.keymap.set("n", "<Leader>db", function() dap.toggle_breakpoint() end, { desc = "Toggle Breakpoint" })
-    vim.keymap.set("n", "<Leader>dB", function()
+    vim.keymap.set("n", "<leader>lDs", function() dap.continue() end, { desc = "Start/Continue Debugging" })
+    vim.keymap.set("n", "<Leader>lDo", function() dap.step_over() end, { desc = "Step Over" })
+    vim.keymap.set("n", "<Leader>lDi", function() dap.step_into() end, { desc = "Step Into" })
+    vim.keymap.set("n", "<Leader>lDO", function() dap.step_out() end, { desc = "Step Out" })
+    vim.keymap.set("n", "<Leader>lDb", function() dap.toggle_breakpoint() end, { desc = "Toggle Breakpoint" })
+    vim.keymap.set("n", "<Leader>lDB", function()
       dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
     end, { desc = "Set Conditional Breakpoint" })
-    vim.keymap.set("n", "<Leader>dL", function()
+    vim.keymap.set("n", "<Leader>lDL", function()
       dap.set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
     end, { desc = "Set Log Point" })
-    vim.keymap.set("n", "<Leader>dr", function() dap.repl.open() end, { desc = "Open REPL" })
-    vim.keymap.set("n", "<Leader>dl", function() dap.run_last() end, { desc = "Run Last Debugging Session" })
+    vim.keymap.set("n", "<Leader>lDr", function() dap.repl.open() end, { desc = "Open REPL" })
+    vim.keymap.set("n", "<Leader>lDl", function() dap.run_last() end, { desc = "Run Last Debugging Session" })
 
     -- DAP Virtual Text setup
     require("nvim-dap-virtual-text").setup()
