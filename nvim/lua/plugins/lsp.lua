@@ -1,3 +1,5 @@
+local util = require 'lspconfig.util'
+
 return {
   -- LSP config
   {
@@ -22,6 +24,8 @@ return {
 
         -- python linter / formatter (ruff)
         ruff = {
+          cmd = { 'ruff-lsp', '--extend-ignore=E701,E703' },
+          root_dir = util.root_pattern('pyproject.toml', '.git'),
           settings = {
             python = {
               analysis = {
@@ -153,9 +157,24 @@ return {
         server = {
           default_settings = {
             ['rust-analyzer'] = {
-              checkOnSave = { command = 'clippy' },
+              checkOnSave = {
+                command = 'clippy',
+                extraArgs = { '--', '-A', 'clippy::too_many_arguments' },
+              },
               procMacro = { enable = true },
-              cargo = { allFeatures = true },
+              cargo = {
+                allFeatures = true,
+                loadOutDirsFromCheck = true,
+              },
+              diagnostics = {
+                enable = true,
+                experimental = {
+                  enable = false,
+                },
+              },
+              files = {
+                watcher = 'client',
+              },
             },
           },
           on_attach = function(client, bufnr)
@@ -165,6 +184,8 @@ return {
             map('<leader>le', '<cmd>RustExpandMacro<CR>', 'Expand Rust Macro')
             map('<leader>lm', '<cmd>RustHoverActions<CR>', 'Rust Hover Actions')
             map('<leader>lt', '<cmd>RustTest<CR>', 'Run Rust Tests')
+
+            vim.bo[bufnr].buftype = ''
           end,
         },
       }
@@ -249,12 +270,15 @@ return {
 
       lint.linters_by_ft = {
         python = { 'mypy' },
-        rust = { 'clippy' },
       }
 
       -- auto-run linting on save
       vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, {
-        callback = function() require('lint').try_lint() end,
+        callback = function()
+          if vim.bo.filetype == 'rust' then return end
+
+          require('lint').try_lint()
+        end,
       })
     end,
   },

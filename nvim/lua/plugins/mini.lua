@@ -30,13 +30,27 @@ return {
     local starter = require 'mini.starter'
     starter.setup {
       items = {
-        starter.sections.recent_files(3, true),
+        function()
+          local items = starter.sections.recent_files(3, true)()
+          return vim.tbl_filter(function(item)
+            if item.filename and vim.fn.fnamemodify(item.filename, ':e') == 'rs' then
+              item.action = function() vim.cmd('edit ' .. item.filename) end
+            end
+            return true
+          end, items)
+        end,
       },
       content_hooks = {
         starter.gen_hook.adding_bullet(),
         starter.gen_hook.aligning('center', 'center'),
       },
       header = header_art,
+      autostart = true,
+      evaluate_single = true,
+      skip_if_valid = function()
+        local buf_name = vim.api.nvim_buf_get_name(0)
+        return vim.fn.fnamemodify(buf_name, ':e') == 'rs'
+      end,
     }
 
     require('mini.icons').setup {}
