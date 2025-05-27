@@ -1,5 +1,3 @@
-local util = require 'lspconfig.util'
-
 return {
   -- LSP config
   {
@@ -23,14 +21,14 @@ return {
         },
 
         -- python linter / formatter (ruff)
+        -- https://docs.astral.sh/ruff/editors/settings/#configurationpreference
         ruff = {
-          cmd = { 'ruff-lsp', '--extend-ignore=E701,E703' },
-          root_dir = util.root_pattern('pyproject.toml', '.git'),
-          settings = {
-            python = {
-              analysis = {
-                autoSearchPaths = true,
-                diagnosticMode = 'workspace',
+          cmd = { 'ruff', 'server', '--preview' },
+          init_options = {
+            settings = {
+              lineLength = 105,
+              lint = {
+                ignore = { 'E701', 'E702', 'E703' },
               },
             },
           },
@@ -133,8 +131,9 @@ return {
       })
 
       -- setup all LSP servers
-      for server, config in pairs(opts.servers or {}) do
-        lspconfig[server].setup(config)
+      for name, cfg in pairs(opts.servers or {}) do
+        cfg.capabilities = get_capabilities(name)
+        lspconfig[name].setup(cfg)
       end
     end,
   },
@@ -247,6 +246,7 @@ return {
       formatters_by_ft = {
         lua = { 'stylua' },
         rust = { 'rustfmt' },
+        python = { 'ruff' },
         json = { 'jq' },
         sh = { 'shfmt' },
         make = { 'just' },
