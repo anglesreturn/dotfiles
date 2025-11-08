@@ -4,10 +4,21 @@ return {
 
     'neovim/nvim-lspconfig',
     dependencies = { 'saghen/blink.cmp', 'b0o/schemastore.nvim' },
-    opts = {
-      servers = {
-        -- python auto-complete only (pyright)
-        pyright = {
+    -- LazyVim merges this opts table into its own
+    opts = function(_, opts)
+      ------------------------------------------------------------------
+      -- safe to require here: lspconfig is already on the runtimepath
+      ------------------------------------------------------------------
+      local util = require 'lspconfig.util'
+
+      ------------------------------------------------------------------
+      -- PYTHON --------------------------------------------------------
+      ------------------------------------------------------------------
+      opts.servers = opts.servers or {}
+
+      -- completion & basic type-stubs
+      opts.servers.pyright = opts.servers.pyright
+        or {
           settings = {
             python = {
               analysis = {
@@ -18,24 +29,30 @@ return {
               },
             },
           },
-        },
+        }
 
-        -- python linter / formatter (ruff)
-        -- https://docs.astral.sh/ruff/editors/settings/#configurationpreference
-        ruff = {
-          cmd = { 'ruff', 'server', '--preview' },
-          init_options = {
-            settings = {
-              lineLength = 105,
-              lint = {
-                ignore = { 'E701', 'E702', 'E703' },
-              },
-            },
+      -- Ruff ≥ 0.4 — built-in server (fast Rust rewrite)
+      opts.servers.ruff = {
+        cmd = { 'ruff', 'server' }, -- add "--preview" only if Ruff < 0.5.3
+        root_dir = util.root_pattern( -- stop ruff from escaping your repo
+          'pyproject.toml',
+          '.ruff.toml',
+          'ruff.toml',
+          '.git'
+        ),
+        settings = { -- CLI flags go here
+          args = {
+            '--config',
+            vim.fn.expand '~/.config/ruff/ruff.toml',
           },
         },
+      }
 
-        -- lua
-        lua_ls = {
+      ------------------------------------------------------------------
+      -- LUA / JSON (unchanged from your file) -------------------------
+      ------------------------------------------------------------------
+      opts.servers.lua_ls = opts.servers.lua_ls
+        or {
           settings = {
             Lua = {
               diagnostics = { globals = { 'vim' } },
@@ -47,28 +64,27 @@ return {
               format = { enable = true },
             },
           },
-        },
+        }
 
-        -- json
-        jsonls = {
-          settings = function()
-            local schemastore = require 'schemastore'
-            return {
-              json = {
-                schemas = schemastore.json.schemas(),
-                validate = { enable = true },
-              },
-            }
+      opts.servers.jsonls = opts.servers.jsonls
+        or {
+          on_new_config = function(new_config)
+            new_config.settings.json.schemas = new_config.settings.json.schemas or {}
+            vim.list_extend(new_config.settings.json.schemas, require('schemastore').json.schemas())
           end,
-        },
+          settings = {
+            json = {
+              schemas = require('schemastore').json.schemas(),
+              validate = { enable = true },
+            },
+          },
+        }
 
-        -- bash
-        bashls = {
-          filetypes = { 'sh', 'bash', 'zsh', 'Makefile' },
-        },
-      },
-    },
-
+      ------------------------------------------------------------------
+      -- BASH — *without* Makefiles so tabs survive --------------------
+      ------------------------------------------------------------------
+      opts.servers.bashls = { filetypes = { 'sh', 'bash', 'zsh' } }
+    end,
     config = function(_, opts)
       local lspconfig = require 'lspconfig'
 
@@ -103,14 +119,26 @@ return {
           end
 
           map('K', vim.lsp.buf.hover, 'Show hover information')
-          map('<leader>la', vim.lsp.buf.code_action, 'Show available code actions')
           map('<leader>ld', vim.lsp.buf.definition, 'Go to definition')
           map('<leader>lr', vim.lsp.buf.rename, 'Rename symbol')
-          map('<leader>li', vim.lsp.buf.implementation, 'Go to implementation')
+          map('<leader>lI', vim.lsp.buf.implementation, 'Go to implementation')
           map('<leader>ls', vim.lsp.buf.signature_help, 'Show function signature help')
+          map(
+            '<leader>li',
+            function()
+              vim.lsp.buf.code_action {
+                apply = true,
+                context = {
+                  only = { 'source.organizeImports' },
+                  diagnostics = {},
+                },
+              }
+            end,
+            'Organize imports'
+          )
 
           map('<leader>fr', require('telescope.builtin').lsp_references, 'Find references')
-          map('<leader>la', vim.lsp.buf.code_action, 'Code Action', { 'n', 'x' })
+          map('<leader>ca', vim.lsp.buf.code_action, 'Code Action', { 'n', 'x' })
           map('<leader>lc', vim.lsp.buf.declaration, 'Goto Declaration')
         end,
       })
@@ -202,7 +230,17 @@ return {
         use_nvim_cmp_as_default = true,
         nerd_font_variant = 'mono',
       },
-      sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
+      sources = {
+        default = { 'lsp', 'path', 'snippets', 'buffer', 'codeium' },
+        providers = {
+          codeium = {
+            name = 'codeium',
+            module = 'codeium.source',
+            score_offset = 100,
+            async = true,
+          },
+        },
+      },
     },
     opts_extend = { 'sources.default' },
   },
@@ -232,7 +270,8 @@ return {
       {
         '<leader>lf',
         function() require('conform').format { async = true, lsp_fallback = true } end,
-        desc = 'Format buffer',
+        mode = { 'n', 'v' },
+        desc = 'Format buffer or selection',
       },
     },
     opts = {
@@ -246,10 +285,10 @@ return {
       formatters_by_ft = {
         lua = { 'stylua' },
         rust = { 'rustfmt' },
-        python = { 'ruff' },
+        python = { 'lsp' }, -- ruff_format
         json = { 'jq' },
         sh = { 'shfmt' },
-        make = { 'just' },
+        make = {},
         toml = { 'taplo' },
       },
     },

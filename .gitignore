@@ -1,0 +1,55 @@
+# Claude Code init file
+.claude-init
+
+# Sensitive credentials and keys
+# 1Password CLI config (contains UUIDs, device IDs)
+op/
+# Solana CLI config (contains API keys)
+solana/
+.git-credentials       # Git credentials in plaintext
+*.key                  # Private keys
+*.pem                  # Certificate files
+*.crt                  # Certificate files
+*.cert                 # Certificate files
+*_rsa                  # SSH keys
+*_ed25519              # SSH keys
+*_ecdsa                # SSH keys
+
+# Environment files with secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# API keys and tokens
+*secret*
+*token*
+*api_key*
+credentials.json
+auth.json
+
+# Cache directories that may contain sensitive data
+.mypy_cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Editor/IDE specific
+.vscode/settings.local.json
+.idea/
+*.swp
+*.swo
+*~
+
+# User-specific Claude Code settings
+.claude/settings.local.json
+
+# iTerm2 application data (contains chat history/sessions)
+iterm2/
+
+# Raycast extensions and AI integrations (may contain API keys)
+raycast/
+
+# htop user preferences
+htop/

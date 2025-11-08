@@ -1,0 +1,112 @@
+[
+  // ─── Core pane / window navigation ─────────────────────────────────────────
+  {
+    "key": "ctrl+h",
+    "command": "workbench.action.focusLeftGroup"
+  },
+  {
+    "key": "ctrl+j",
+    "command": "workbench.action.focusBelowGroup"
+  },
+  {
+    "key": "ctrl+k",
+    "command": "workbench.action.focusAboveGroup"
+  },
+  {
+    "key": "ctrl+l",
+    "command": "workbench.action.focusRightGroup"
+  },
+  // Same motions inside integrated terminal
+  {
+    "key": "ctrl+h",
+    "when": "terminalFocus",
+    "command": "workbench.action.terminal.focusPreviousPane"
+  },
+  {
+    "key": "ctrl+l",
+    "when": "terminalFocus",
+    "command": "workbench.action.terminal.focusNextPane"
+  },
+  {
+    "key": "ctrl+j",
+    "when": "terminalFocus",
+    "command": "workbench.action.focusBelowGroup"
+  },
+  {
+    "key": "ctrl+k",
+    "when": "terminalFocus",
+    "command": "workbench.action.focusAboveGroup"
+  },
+  // ─── tmux-style prefix (Ctrl-a) chords ─────────────────────────────────────
+  {
+    "key": "ctrl+a ctrl+|",
+    "command": "workbench.action.splitEditorRight"
+  }, // vertical split
+  {
+    "key": "ctrl+a ctrl+-",
+    "command": "workbench.action.splitEditorDown"
+  }, // horizontal split
+  {
+    "key": "ctrl+a ctrl+x",
+    "command": "workbench.action.closeActiveEditor"
+  },
+  {
+    "key": "ctrl+a ctrl+c",
+    "command": "workbench.action.files.newUntitledFile"
+  },
+  {
+    "key": "ctrl+a ctrl+t",
+    "command": "workbench.action.terminal.new"
+  },
+  // ─── QoL -------------------------------------------------------------------
+  {
+    "key": "ctrl+u",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  {
+    "key": "ctrl+shift+r",
+    "command": "workbench.action.reloadWindow"
+  },
+  {
+    "key": "ctrl+shift+`",
+    "command": "workbench.action.terminal.split"
+  },
+  // ─── which-key menu --------------------------------------------------------
+  // --- terminal ----
+  {
+    "key": "space",
+    "command": "whichkey.show",
+    "when": "!inputFocus && !whichkeyActive"
+  },
+  // jump down from editor into panel/terminal
+  {
+    "key": "ctrl+j",
+    "when": "editorFocus && !terminalFocus",
+    "command": "workbench.action.terminal.focus"
+  },
+  // jump back up from panel/terminal to last editor group
+  {
+    "key": "ctrl+k",
+    "when": "terminalFocus",
+    "command": "workbench.action.focusActiveEditorGroup"
+  },
+  // ─── Explorer ↔ editor ──────────────────────────────────────────
+  // jump **right** from the Explorer tree into the last-active editor
+  {
+    "key": "ctrl+l",
+    "command": "workbench.action.focusActiveEditorGroup",
+    "when": "explorerViewletVisible && listFocus"
+  },
+  // jump **left** into the Explorer when you’re already in the left-most editor group
+  {
+    "key": "ctrl+h",
+    "command": "workbench.action.focusSideBar",
+    "when": "editorTextFocus && activeEditorGroupIndex == 1"
+  },
+  // close the Explorer (or any sidebar) with <Esc><Esc>
+  {
+    "key": "escape escape",
+    "command": "workbench.action.closeSidebar",
+    "when": "sidebarFocus"
+  }
+]

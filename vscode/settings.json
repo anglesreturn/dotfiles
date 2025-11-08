@@ -1,0 +1,35 @@
+{
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Ayu One Dark",
+
+  // tell the Vim extension your leader key
+  "vim.leader": "<space>",
+
+  "vim.useSystemClipboard": true,
+  "vim.handleKeys": { "<D-v>": true },
+
+
+  // your custom Normal-mode mappings
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["<leader>", "e"],
+      "commands": ["workbench.view.explorer"]
+    },
+    {
+      "before": ["<C-h>"],
+      "commands": ["workbench.action.focusLeftGroup"]
+    },
+    {
+      "before": ["<C-j>"],
+      "commands": ["workbench.action.focusBelowGroup"]
+    },
+    {
+      "before": ["<C-k>"],
+      "commands": ["workbench.action.focusAboveGroup"]
+    },
+    {
+      "before": ["<C-l>"],
+      "commands": ["workbench.action.focusRightGroup"]
+    }
+  ]
+}

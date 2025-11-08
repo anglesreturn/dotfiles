@@ -1,0 +1,11 @@
+[tool.ruff]
+# Set maximum line length
+line-length = 105
+
+# Suppress these diagnostics entirely
+ignore = ["E701", "E702", "E703", "F401"]
+
+# When running the formatter (ruff format or via LSP --preview),
+# attempt all fixes except these codes
+fixable = ["ALL"]
+unfixable = ["E701", "E702", "E703", "F401"]
