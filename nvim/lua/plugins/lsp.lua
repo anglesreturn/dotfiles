@@ -231,15 +231,7 @@ return {
         nerd_font_variant = 'mono',
       },
       sources = {
-        default = { 'lsp', 'path', 'snippets', 'buffer', 'codeium' },
-        providers = {
-          codeium = {
-            name = 'codeium',
-            module = 'codeium.source',
-            score_offset = 100,
-            async = true,
-          },
-        },
+        default = { 'lsp', 'path', 'snippets', 'buffer' },
       },
     },
     opts_extend = { 'sources.default' },
