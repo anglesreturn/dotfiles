@@ -86,8 +86,6 @@ return {
       opts.servers.bashls = { filetypes = { 'sh', 'bash', 'zsh' } }
     end,
     config = function(_, opts)
-      local lspconfig = require 'lspconfig'
-
       -- per server capabilities
       local function get_capabilities(server)
         local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -151,17 +149,20 @@ return {
         severity_sort = true,
       }
 
-      -- show in normal mode (not insert) and on hover
+      -- show diagnostics on cursor hold
       vim.api.nvim_create_autocmd('CursorHold', {
         callback = function()
-          if vim.fn.mode() ~= 'i' then vim.diagnostic.open_float(nil, { focus = false }) end
+          if vim.fn.mode() ~= 'i' then
+            vim.diagnostic.open_float(nil, { focus = false })
+          end
         end,
       })
 
-      -- setup all LSP servers
+      -- setup all LSP servers using new vim.lsp.config API
       for name, cfg in pairs(opts.servers or {}) do
         cfg.capabilities = get_capabilities(name)
-        lspconfig[name].setup(cfg)
+        vim.lsp.config[name] = cfg
+        vim.lsp.enable(name)
       end
     end,
   },
@@ -277,7 +278,7 @@ return {
       formatters_by_ft = {
         lua = { 'stylua' },
         rust = { 'rustfmt' },
-        python = { 'lsp' }, -- ruff_format
+        python = { 'ruff_format' },
         json = { 'jq' },
         sh = { 'shfmt' },
         make = {},

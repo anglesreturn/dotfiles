@@ -42,6 +42,24 @@ return {
   --   end,
   -- },
   {
+    'NvChad/nvim-colorizer.lua',
+    event = 'BufReadPre',
+    opts = {
+      user_default_options = {
+        RGB = true,
+        RRGGBB = true,
+        names = true,
+        RRGGBBAA = true,
+        rgb_fn = true,
+        hsl_fn = true,
+        css = true,
+        css_fn = true,
+        mode = 'background',
+        tailwind = true,
+      },
+    },
+  },
+  {
     'nvim-lualine/lualine.nvim',
     dependencies = {
       'meuter/lualine-so-fancy.nvim',

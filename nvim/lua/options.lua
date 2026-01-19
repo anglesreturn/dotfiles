@@ -58,6 +58,9 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 15
 
+-- Rounded borders for floating windows
+vim.opt.winborder = 'rounded'
+
 -- Auto-commands
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'python', 'lua', 'javascript', 'typescript' },
