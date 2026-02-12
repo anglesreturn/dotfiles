@@ -46,7 +46,7 @@ return {
       },
       header = header_art,
       autostart = true,
-      evaluate_single = true,
+      evaluate_single = false,
       skip_if_valid = function()
         local buf_name = vim.api.nvim_buf_get_name(0)
         return vim.fn.fnamemodify(buf_name, ':e') == 'rs'
