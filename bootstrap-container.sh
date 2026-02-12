@@ -24,7 +24,8 @@ sudo apt-get install -y \
   python3-pip \
   python3-venv \
   nodejs \
-  npm
+  npm \
+  luarocks
 
 echo "Installing Neovim..."
 if ! command -v nvim &>/dev/null; then
@@ -49,6 +50,12 @@ cargo install taplo-cli --locked
 echo "Installing Python tools..."
 pip3 install --upgrade pip
 pip3 install ruff mypy
+
+echo "Setting up tmux plugin manager..."
+if [ ! -d "$HOME/.config/tmux/plugins/tpm" ]; then
+  git clone https://github.com/tmux-plugins/tpm "$HOME/.config/tmux/plugins/tpm"
+fi
+~/.config/tmux/plugins/tpm/bin/install_plugins
 
 echo "Setting up Neovim..."
 nvim --headless "+Lazy! sync" +qa
