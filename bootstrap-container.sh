@@ -35,17 +35,13 @@ if ! command -v nvim &>/dev/null; then
   rm nvim-linux64.tar.gz
 fi
 
-echo "Installing Rust toolchain..."
-if ! command -v rustc &>/dev/null; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  source "$HOME/.cargo/env"
-fi
-
 echo "Installing formatters..."
-cargo install stylua
+wget -qO- https://github.com/JohnnyMorganz/StyLua/releases/latest/download/stylua-linux-x86_64.zip >/tmp/stylua.zip
+unzip -o /tmp/stylua.zip -d /tmp && sudo install /tmp/stylua /usr/local/bin/stylua
 wget -qO- https://github.com/mvdan/sh/releases/latest/download/shfmt_linux_amd64 >/tmp/shfmt
 sudo install /tmp/shfmt /usr/local/bin/shfmt
-cargo install taplo-cli --locked
+wget -qO- https://github.com/tamasfe/taplo/releases/latest/download/taplo-linux-x86_64.gz | gunzip >/tmp/taplo
+sudo install /tmp/taplo /usr/local/bin/taplo
 
 echo "Installing Python tools..."
 pip3 install --upgrade pip

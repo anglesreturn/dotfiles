@@ -31,7 +31,7 @@ return {
           },
         }
 
-      -- Ruff ≥ 0.4 — built-in server (fast Rust rewrite)
+      -- Ruff ≥ 0.4 — built-in server
       opts.servers.ruff = {
         cmd = { 'ruff', 'server' }, -- add "--preview" only if Ruff < 0.5.3
         root_dir = util.root_pattern( -- stop ruff from escaping your repo
@@ -172,54 +172,6 @@ return {
     'b0o/schemastore.nvim',
   },
 
-  -- rustacean
-  {
-    'mrcjkb/rustaceanvim',
-    version = '^4',
-    ft = { 'rust' },
-    init = function()
-      vim.g.rustaceanvim = {
-        tools = {
-          hover_actions = { auto_focus = true },
-        },
-        server = {
-          default_settings = {
-            ['rust-analyzer'] = {
-              checkOnSave = {
-                command = 'clippy',
-                extraArgs = { '--', '-A', 'clippy::too_many_arguments' },
-              },
-              procMacro = { enable = true },
-              cargo = {
-                allFeatures = true,
-                loadOutDirsFromCheck = true,
-              },
-              diagnostics = {
-                enable = true,
-                experimental = {
-                  enable = false,
-                },
-              },
-              files = {
-                watcher = 'client',
-              },
-            },
-          },
-          on_attach = function(client, bufnr)
-            local map = function(keys, func, desc)
-              vim.keymap.set('n', keys, func, { buffer = bufnr, desc = 'Rust: ' .. desc })
-            end
-            map('<leader>le', '<cmd>RustExpandMacro<CR>', 'Expand Rust Macro')
-            map('<leader>lm', '<cmd>RustHoverActions<CR>', 'Rust Hover Actions')
-            map('<leader>lt', '<cmd>RustTest<CR>', 'Run Rust Tests')
-
-            vim.bo[bufnr].buftype = ''
-          end,
-        },
-      }
-    end,
-  },
-
   -- blink auto comp
   {
     'saghen/blink.cmp',
@@ -272,12 +224,11 @@ return {
       format_on_save = function(bufnr)
         return {
           timeout_ms = 500,
-          lsp_fallback = vim.bo[bufnr].filetype ~= 'rust', -- Ensure rustfmt is used over LSP
+          lsp_fallback = true,
         }
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        rust = { 'rustfmt' },
         python = { 'ruff_format' },
         json = { 'jq' },
         sh = { 'shfmt' },
@@ -307,8 +258,6 @@ return {
       -- auto-run linting on save
       vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, {
         callback = function()
-          if vim.bo.filetype == 'rust' then return end
-
           require('lint').try_lint()
         end,
       })

@@ -22,15 +22,11 @@ brew install \
   python@3.12 \
   luarocks
 
-echo "Installing Rust toolchain..."
-if ! command -v rustc &>/dev/null; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  source "$HOME/.cargo/env"
-fi
+echo "Installing fonts..."
+brew install --cask font-meslo-lg-nerd-font
 
 echo "Installing formatters..."
-cargo install stylua
-brew install shfmt taplo
+brew install stylua shfmt taplo
 
 echo "Installing Python tools..."
 pip3 install --upgrade pip
@@ -41,6 +37,12 @@ if [ ! -d "$HOME/.config/tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm "$HOME/.config/tmux/plugins/tpm"
 fi
 ~/.config/tmux/plugins/tpm/bin/install_plugins
+
+echo "Configuring iTerm2 font..."
+if [ -f "$HOME/Library/Preferences/com.googlecode.iterm2.plist" ]; then
+  /usr/libexec/PlistBuddy -c "Set ':New Bookmarks:0:Normal Font' 'MesloLGS-NF-Regular 13'" \
+    "$HOME/Library/Preferences/com.googlecode.iterm2.plist" 2>/dev/null || true
+fi
 
 echo "Setting up Neovim..."
 nvim --headless "+Lazy! sync" +qa
